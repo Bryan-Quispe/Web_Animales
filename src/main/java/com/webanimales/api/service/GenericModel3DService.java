@@ -1,6 +1,7 @@
 package com.webanimales.api.service;
 
 import com.webanimales.api.entity.GenericModel3D;
+import com.webanimales.api.exception.NotFoundException;
 import com.webanimales.api.repository.GenericModel3DRepository;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +22,7 @@ public class GenericModel3DService {
 
     public GenericModel3D findById(Long id) {
         return genericModel3DRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("GenericModel3D not found: " + id));
+                .orElseThrow(() -> new NotFoundException("GenericModel3D not found: " + id));
     }
 
     public GenericModel3D create(GenericModel3D genericModel3D) {

@@ -4,6 +4,7 @@ import com.webanimales.api.dto.LostPetReportRequest;
 import com.webanimales.api.dto.LostPetReportResponse;
 import com.webanimales.api.entity.GenericModel3D;
 import com.webanimales.api.entity.LostPetReport;
+import com.webanimales.api.exception.NotFoundException;
 import com.webanimales.api.repository.GenericModel3DRepository;
 import com.webanimales.api.repository.LostPetReportRepository;
 import org.junit.jupiter.api.Test;
@@ -65,6 +66,43 @@ class LostPetReportServiceTest {
 
         when(genericModel3DRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> lostPetReportService.create(request));
+        assertThrows(NotFoundException.class, () -> lostPetReportService.create(request));
+    }
+
+    @Test
+    void updateShouldReplaceFieldsAndGenericModel() {
+        LostPetReportRequest request = new LostPetReportRequest();
+        request.setPetName("Rocky");
+        request.setSpecificDescription("Blue collar");
+        request.setStatus("FOUND");
+        request.setLatitude(-12.05);
+        request.setLongitude(-77.03);
+        request.setGenericModelId(2L);
+
+        GenericModel3D currentModel = new GenericModel3D();
+        currentModel.setId(1L);
+        GenericModel3D newModel = new GenericModel3D();
+        newModel.setId(2L);
+
+        LostPetReport existing = new LostPetReport();
+        existing.setId(12L);
+        existing.setPetName("Old");
+        existing.setSpecificDescription("Old desc");
+        existing.setStatus("LOST");
+        existing.setLatitude(-1.0);
+        existing.setLongitude(-1.0);
+        existing.setGenericModel(currentModel);
+
+        when(lostPetReportRepository.findById(12L)).thenReturn(Optional.of(existing));
+        when(genericModel3DRepository.findById(2L)).thenReturn(Optional.of(newModel));
+        when(lostPetReportRepository.save(any(LostPetReport.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LostPetReportResponse response = lostPetReportService.update(12L, request);
+
+        assertEquals(12L, response.getId());
+        assertEquals("Rocky", response.getPetName());
+        assertEquals("Blue collar", response.getSpecificDescription());
+        assertEquals("FOUND", response.getStatus());
+        assertEquals(2L, response.getGenericModelId());
     }
 }
